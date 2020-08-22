@@ -10,3 +10,6 @@ pdf_is_standalone = true
 # Static link to c++ library
 use_custom_libcxx=true
 libcpp_is_static=true
+
+# With symbol_level = 0 there is no source-level debugging but call stacks still have function names.
+symbol_level = 0

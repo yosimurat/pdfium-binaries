@@ -12,3 +12,6 @@ pdf_enable_xfa = false
 
 # Enable experimental win32 GDI APIs.
 pdf_use_win32_gdi = true
+
+# With symbol_level = 0 there is no source-level debugging but call stacks still have function names.
+symbol_level = 0

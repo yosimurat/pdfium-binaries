@@ -7,3 +7,5 @@ pdf_enable_v8 = false
 # Build PDFium standalone (default = false)
 pdf_is_standalone = true
 
+# With symbol_level = 0 there is no source-level debugging but call stacks still have function names.
+symbol_level = 0

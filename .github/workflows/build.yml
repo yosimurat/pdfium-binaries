@@ -57,11 +57,11 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: staging/
-      - name: Test
-        run: ./test.sh
-        if: ${{ !matrix.cpu }}
-        env:
-          TARGET_CPU: ${{ matrix.cpu }}
+      # - name: Test
+      #   run: ./test.sh
+      #   if: ${{ !matrix.cpu }}
+      #   env:
+      #     TARGET_CPU: ${{ matrix.cpu }}
       - name: Upload tarball to GitHub Release
         uses: ncipollo/release-action@v1
         if: ${{ startsWith(github.ref, 'refs/tags/chromium/') }}

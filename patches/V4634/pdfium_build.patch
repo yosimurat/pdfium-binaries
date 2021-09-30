@@ -1,0 +1,72 @@
+diff --git a/config/BUILD.gn b/config/BUILD.gn
+index ed94a16a0..713e30962 100644
+--- a/config/BUILD.gn
++++ b/config/BUILD.gn
+@@ -228,7 +228,7 @@ config("default_libs") {
+   } else if (is_linux || is_chromeos) {
+     libs = [
+       "dl",
+-      "pthread",
++      #"pthread",
+       "rt",
+     ]
+   }
+diff --git a/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index 0bb155a83..70644192b 100644
+--- a/config/compiler/BUILD.gn
++++ b/config/compiler/BUILD.gn
+@@ -330,7 +330,7 @@ config("compiler") {
+       if (is_debug) {
+         cflags += [ "-fstack-protector-strong" ]
+       } else {
+-        cflags += [ "-fstack-protector" ]
++        cflags += [ "-fno-stack-protector" ]
+       }
+     } else if ((is_posix && !is_chromeos_ash && !is_nacl) || is_fuchsia) {
+       # TODO(phajdan.jr): Use -fstack-protector-strong when our gcc supports it.
+@@ -342,7 +342,7 @@ config("compiler") {
+         cflags += [ "-fno-stack-protector" ]
+       } else if (current_os != "aix") {
+         # Not available on aix.
+-        cflags += [ "-fstack-protector" ]
++        cflags += [ "-fno-stack-protector" ]
+       }
+     }
+ 
+@@ -491,7 +491,7 @@ config("compiler") {
+   }
+ 
+   if (is_linux || is_chromeos) {
+-    cflags += [ "-pthread" ]
++    #cflags += [ "-pthread" ]
+     # Do not use the -pthread ldflag here since it becomes a no-op
+     # when using -nodefaultlibs, which would cause an unused argument
+     # error.  "-lpthread" is added in //build/config:default_libs.
+@@ -850,9 +850,9 @@ config("compiler_cpu_abi") {
+     # simplicity we always explicitly set the architecture.
+     if (current_cpu == "x64") {
+       cflags += [
+-        "-m64",
+-        "-march=$x64_arch",
+-        "-msse3",
++        #"-m64",
++        #"-march=$x64_arch",
++        #"-msse3",
+       ]
+       ldflags += [ "-m64" ]
+     } else if (current_cpu == "x86") {
+diff --git a/toolchain/gcc_toolchain.gni b/toolchain/gcc_toolchain.gni
+index a303d472b..199396f93 100644
+--- a/toolchain/gcc_toolchain.gni
++++ b/toolchain/gcc_toolchain.gni
+@@ -674,8 +674,8 @@ template("clang_toolchain") {
+ 
+   gcc_toolchain(target_name) {
+     prefix = rebase_path("$clang_base_path/bin", root_build_dir)
+-    cc = "$prefix/clang"
+-    cxx = "$prefix/clang++"
++    cc = "emcc"
++    cxx = "em++"
+     ld = cxx
+     readelf = "${toolprefix}readelf"
+     ar = "${prefix}/llvm-ar"

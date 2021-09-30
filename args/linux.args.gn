@@ -1,12 +1,31 @@
+target_os="linux"
+target_cpu="x64"
+use_goma=false
+is_debug=false
+
+pdf_use_skia=false
+pdf_use_skia_paths=false
+
 # Disable component build
 is_component_build = false
 
 # Build PDFium either with or without v8 support (default = true)
 pdf_enable_v8 = false
+pdf_enable_xfa = false
+
+clang_use_chrome_plugins=false
 
 # Build PDFium standalone (default = false)
 pdf_is_standalone = true
 
 # Static link to c++ library
-use_custom_libcxx=true
-libcpp_is_static=true
+use_debug_fission=false
+use_custom_libcxx=false
+use_sysroot=false
+use_system_libjpeg=true
+use_system_zlib=true
+pdf_is_complete_lib=true
+symbol_level=0
+
+# use_custom_libcxx=true
+# libcpp_is_static=true

@@ -27,6 +27,8 @@ PDFium_BUILD_DIR="$PDFium_SOURCE_DIR/out"
 PDFium_PATCH_DIR="$PWD/patches"
 PDFium_CMAKE_CONFIG="$PWD/PDFiumConfig.cmake"
 PDFium_ARGS="$PWD/args/$OS.args.gn"
+EMSDK_SOURCE_DIR="$PWD/emsdk"
+WASM_SOURCE_DIR="$PWD/src"
 
 # Output
 PDFium_STAGING_DIR="$PWD/staging"
@@ -44,6 +46,14 @@ PDFium_ARTIFACT="$PDFium_ARTIFACT_BASE.tgz"
 mkdir -p "$PDFium_BUILD_DIR"
 mkdir -p "$PDFium_STAGING_DIR"
 mkdir -p "$PDFium_LIB_DIR"
+
+# Install emsdk
+mkdir -p "$EMSDK_SOURCE_DIR"
+cd "$EMSDK_SOURCE_DIR"
+git clone https://github.com/emscripten-core/emsdk.git . 
+./emsdk install 2.0.24
+./emsdk activate 2.0.24
+export PATH="$PATH:$EMSDK_SOURCE_DIR:$EMSDK_SOURCE_DIR/upstream/emscripten"
 
 # Download depot_tools if not exists in this location or update utherwise
 if [ ! -d "$DepotTools_DIR" ]; then
@@ -65,24 +75,14 @@ git checkout "${PDFium_BRANCH:-master}"
 gclient sync
 
 # Patch
+cd "$PDFium_SOURCE_DIR/build"
+git apply -v "$PDFium_PATCH_DIR/V4634/pdfium_build.patch"
 cd "$PDFium_SOURCE_DIR"
-git apply -v "$PDFium_PATCH_DIR/shared_library.patch"
-git apply -v "$PDFium_PATCH_DIR/relative_includes.patch"
-#git apply -v "$PDFium_PATCH_DIR/static_libstdcxx.patch"
-[ "$PDFium_V8" == "enabled" ] && git apply -v "$PDFium_PATCH_DIR/v8_init.patch"
+git apply -v "$PDFium_PATCH_DIR/V4634/pdfium.patch"
+git apply -v "$PDFium_PATCH_DIR/V4634/pdfium_h.patch"
 
 # Configure
 cp "$PDFium_ARGS" "$PDFium_BUILD_DIR/args.gn"
-[ "$CONFIGURATION" == "Release" ] && echo 'is_debug=false' >> "$PDFium_BUILD_DIR/args.gn"
-[ "$PDFium_V8" == "enabled" ] && echo 'pdf_enable_v8=true' >> "$PDFium_BUILD_DIR/args.gn"
-[ "$PDFium_V8" == "enabled" ] && echo 'pdf_enable_xfa=true' >> "$PDFium_BUILD_DIR/args.gn"
-[ "$OS" == "darwin" ] && echo 'mac_deployment_target = "10.11.0"' >> "$PDFium_BUILD_DIR/args.gn"
-[ "$TARGET_CPU" != "" ] && echo "target_cpu=\"$TARGET_CPU\"" >> "$PDFium_BUILD_DIR/args.gn"
-
-# Install additional images if needed
-if [ "$TARGET_CPU" == "arm" ] && [ "$OS" == "linux" ]; then
-  build/linux/sysroot_scripts/install-sysroot.py --arch=arm
-fi
 
 # Generate Ninja files
 gn gen "$PDFium_BUILD_DIR"
@@ -94,17 +94,14 @@ ls -l "$PDFium_BUILD_DIR"
 # Install
 cp "$PDFium_CMAKE_CONFIG" "$PDFium_STAGING_DIR"
 cp "$PDFium_SOURCE_DIR/LICENSE" "$PDFium_STAGING_DIR"
+cp "$PDFium_BUILD_DIR/obj/libpdfium.a" "$PDFium_STAGING_DIR"
 cp -R "$PDFium_SOURCE_DIR/public" "$PDFium_INCLUDE_DIR"
-rm -f "$PDFium_INCLUDE_DIR/DEPS"
-rm -f "$PDFium_INCLUDE_DIR/README"
-rm -f "$PDFium_INCLUDE_DIR/PRESUBMIT.py"
-[ "$OS" == "linux" ] && mv "$PDFium_BUILD_DIR/libpdfium.so" "$PDFium_LIB_DIR"
-[ "$OS" == "darwin" ] && mv "$PDFium_BUILD_DIR/libpdfium.dylib" "$PDFium_LIB_DIR"
-if [ "$PDFium_V8" == "enabled" ]; then
-  mkdir -p "$PDFium_RES_DIR"
-  mv "$PDFium_BUILD_DIR/icudtl.dat" "$PDFium_RES_DIR"
-  mv "$PDFium_BUILD_DIR/snapshot_blob.bin" "$PDFium_RES_DIR"
-fi
+cp "$WASM_SOURCE_DIR/custom.cpp" "$PDFium_STAGING_DIR"
+cp "$WASM_SOURCE_DIR/function-names.txt" "$PDFium_STAGING_DIR"
+
+# WASM
+cd "$PDFium_STAGING_DIR"
+em++ -O3 -o pdfium.html -s "EXPORTED_FUNCTIONS=`cat function-names.txt`" -s "EXPORTED_RUNTIME_METHODS=['ccall','cwrap']" custom.cpp libpdfium.a -I./include -s DEMANGLE_SUPPORT=1 -s USE_ZLIB=1 -s USE_LIBJPEG=1 -s WASM=1 -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1 -std=c++11 -Wall --no-entry
 
 # Pack
 cd "$PDFium_STAGING_DIR"

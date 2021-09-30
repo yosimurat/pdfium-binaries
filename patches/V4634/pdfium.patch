@@ -1,0 +1,13 @@
+diff --git a/third_party/base/allocator/partition_allocator/spin_lock.cc b/third_party/base/allocator/partition_allocator/spin_lock.cc
+index 39d67b624..8ea0f7e27 100644
+--- a/third_party/base/allocator/partition_allocator/spin_lock.cc
++++ b/third_party/base/allocator/partition_allocator/spin_lock.cc
+@@ -51,7 +51,7 @@
+ #endif  // ARCH
+ 
+ #ifndef YIELD_PROCESSOR
+-#warning "Processor yield not supported on this architecture."
++//#warning "Processor yield not supported on this architecture."
+ #define YIELD_PROCESSOR ((void)0)
+ #endif
+ 
